@@ -8,15 +8,32 @@ body
 	background: lightgreen;
 }
 
+/*NOTE: that we use .css() method in javascript because if we applay margins now
+        then it will affect the location of both textbox and button */
+#instructions
+{
+	font-size: 20px;
+	
 
-#inputPlayer
+}
+
+#instructions2
+{
+	font-size: 20px;
+	
+
+}
+
+
+
+#name
 {
 	margin-left: 450px;
 	margin-right: 20px;
 	margin-top: 20px;
 }
 
-#button1
+#submit-button
 {
 	margin-top: 20px;
 	background: lightgreen;
@@ -89,7 +106,7 @@ body
 }
 
 /* Player 1 Div */
-#box0
+#box1
 {
  float: left;
  border: 1px solid black;
@@ -114,7 +131,7 @@ body
 }
 
 /* Player 2 Div */
-#box1
+#box2
 {
  float: left;
  border: 1px solid black;
@@ -131,13 +148,13 @@ body
 
 
 /* Waiting for player1 & 2 */
-.header0	/* player1 */
+.header1	/* player1 */
 {
 	
 
 }
 
-.header1	/* player2 */
+.header2	/* player2 */
 {
 	
 
@@ -145,7 +162,13 @@ body
 
 
 /* displays player name inside playerDiv. Will hide until player enters name */
-.name
+.name1
+{
+	display: none;
+
+}
+
+.name2
 {
 	display: none;
 
@@ -154,49 +177,49 @@ body
 /* User selects paper rock or scissors and display these options on each player turn  for each player*/
 
 /*player 1 */
-.paper0
-{
-	display: none;
-}
-
-/*player 2 */
 .paper1
 {
 	display: none;
 }
 
-/*player 1 */
-.rock0
+/*player 2 */
+.paper2
 {
 	display: none;
 }
 
-/*player 2 */
+/*player 1 */
 .rock1
 {
 	display: none;
 }
 
-/*player 1 */
-.scissors0
+/*player 2 */
+.rock2
 {
 	display: none;
 }
 
-/*player 2 */
+/*player 1 */
 .scissors1
 {
 	display: none;
 }
 
+/*player 2 */
+.scissors2
+{
+	display: none;
+}
+
 /* player 1 */
-.win_lose0
+.win_lose1
 {
 	display: none;
 }
 
 /* player 2 */
-.win_lose1
+.win_lose2
 {
 	display: none;
 }
@@ -220,3 +243,5 @@ body
 		margin-top: 20px;
 	}
 }
+
+

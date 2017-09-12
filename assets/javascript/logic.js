@@ -1,3 +1,6 @@
+ $(document).ready(function()
+ {
+
  // Initialize Firebase
   var config = 
   {
@@ -11,135 +14,75 @@
   firebase.initializeApp(config);
 
   //Create a variable to reference the database
+  //This creates multiple roots/subroots in Firebase/database
   var database = firebase.database();
 
-  //ConnectionsRef references a specific location in our database.
-//All of our connections will be stored in this directory.
-var connectionsRef = database.ref("/connections");           //connections
-
-//'.info/connected' is a special location provided by firebase that is
-//updated every time the client's connection stat changes.
-//'.info/connected' is a boolean value, true if the client is connected and false if they are not.
-var connectedRef = database.ref(".info/connected");
-
-
-
+//firebase references
+  //This creates multiple roots/subroots in Firebase/database
+  var database = firebase.database();
+  var data = database.ref('data');            //Root[data]
+  var turn = data.child('turn');              //child Root of (data)-->[turn]
+  var playersRef = data.child('players');     //child Root of (data)-->[players]
+  var player1Ref = playersRef.child('1');     //child Root of (players)-->[1]
+  var player2Ref = playersRef.child('2');     //child Root of (players)-->[2]
 
 
 //Global Variables
+
+//Used for 3 div boxes (Player 1 div) (Winner Div)  (Player2 div)
 var playerDiv;
-var totalWins = 0;
-var totalLosses = 0;
-
-var click = 100;
-
-//Used as index tecnique to know <div> container to show player name when obtaining
-//the name from the textbox.
-var playerPos = 0;
+var player1Exists;
+var player2Exists;
+var changeDOM;
+var name;
 
 
-//store player 1 & player 2 choice in database
-var choice;
-
-
-
-
-// At the initial load and on subsequent data value changes, get a snapshot of the current data. (I.E FIREBASE HERE)
-// This callback keeps the page updated when a value changes in firebase.
-
-//Player 1
-database.ref("players/1").on("value", function(snapshot)
+//Create an object in order to have 2 serperate screens.
+//in other words we want to display 2 seperate screens for each player
+var gameObject =
 {
+	//Player1 Instance Variables with values
+	userId: "",
+	name: "",
+	pick: "",
+	wins: 0,
+	losses: 0,
+	ties: 0,
 
-                                      	                   
-	
-	// Change the value of our clickCounter to match the value in the database
-	totalWins = snapshot.val().totalWins;                                               //actual value in database
-	totalLosses = snapshot.val().totalLosses;                                           //actual value in database
-	
+	//Player 2 
+	name2: "",
+	pick2: "",
+	wins2: 0,
+	losses2: 0,
+	ties2: 0,
 
-	// Change the HTML using jQuery to reflect the updated clickCounter value
-	//NOTE: snapshot.val().clickCount is a function that obtains the value
-	//      in the (firebase/database). The database variable is (clickCount)
-					//Player1
-	$("#totalWin" + 0).html(snapshot.val().totalWins);                                      //SAME AS: $("#click-value").html(clickCounter);
-	$("#totalLose" + 0).html(snapshot.val().totalLosses);                                   //SAME AS: $("#click-value").html(clickCounter);
+	//Used to determin which players turn or Which player DOM (chooses rock, paper, scissors) we're on
+	turn: 0
+};
 
-	$(".paper" + 0).show();
-	$(".rock" + 0).show();
-	$(".scissors" + 0).show();
-
-	
-
-}, 
-
-function(errorObject)
-{
-  console.log("The read failed: " + errorObject.code);
-});
-
-
-// At the initial load and on subsequent data value changes, get a snapshot of the current data. (I.E FIREBASE HERE)
-// This callback keeps the page updated when a value changes in firebase.
-
-//Player 2 (NOTE: This only affects Player 2 div and won't affect Player 1 div)
-database.ref("players/2").on("value", function(snapshot)
-{
-
-                                      	                   
-
-	// Change the value of our clickCounter to match the value in the database
-	 totalWins = snapshot.val().totalWins;                                               //actual value in database
-	 totalLosses = snapshot.val().totalLosses;                                           //actual value in database
-	
-
-	// Change the HTML using jQuery to reflect the updated clickCounter value
-	//NOTE: snapshot.val().clickCount is a function that obtains the value
-	//      in the (firebase/database). The database variable is (clickCount)
-					//Player1
-	$("#totalWin" + 1).html(snapshot.val().totalWins);                                      //SAME AS: $("#click-value").html(clickCounter);
-	$("#totalLose" + 1).html(snapshot.val().totalLosses);                                   //SAME AS: $("#click-value").html(clickCounter);
-
-	
-
-	
-
-}, 
-
-function(errorObject)
-{
-  console.log("The read failed: " + errorObject.code);
-});
-
-
-
-
-
-
-
-//create 3 dives Player1, Winner is, Player 2
-for(var i = 0; i < 2; i++)
+//create 3 divs Player1, Winner is, Player 2
+for(var i = 1; i <= 2; i++)
 {
 	//create an empty div each with a distinct id
 	playerDiv = $("<div id='box" + i + "'>");
 
 	//give each player a class
-	playerDiv.addClass("playerContainer");
+	//playerDiv.addClass("playerContainer");
 
 	//give each player an wins & loses attribute
-	playerDiv.attr("Wins", totalWins);
-	playerDiv.attr("Losses", totalLosses);
+	//playerDiv.attr("Wins", totalWins);
+	//playerDiv.attr("Losses", totalLosses);
 
 	//Use id's so we can display certain data inside our div container at the right moment
 	//NOTE: use (animate.show() ) to unhide data inside div container.
 	var p = $("<p>");
-	p.html("<p class='header" + i + "'> Waiting for player" + (i+1) + "</p>");
+	p.html("<p class='header" + i + "'> Waiting for player" + (i) + "</p>");
 
 
 
 	//Dispaly name that was entered in the textbox as soon ass we hit (submit)
 	var p2 = $("<p>");
-	p2.html("<p class='name name" + i + "'>  </p>");
+	p2.html("<p class='name" + i + "'>  </p>");
 
 
 
@@ -148,10 +91,11 @@ for(var i = 0; i < 2; i++)
 
 	//This allows us to know which paper we clicked on since we have 2 palyers that contain
 	//paper choice so using class will help us know which player selected that choice.
-	paper.addClass("paperClass");
+	//paper.addClass("paperClass");
+	paper.addClass("choice")
 
 	//give (paper) div a value which is used to display on screen player1 or player2's choice	
-	paper.attr("value", "paper");
+	paper.attr("pick", "paper");
 
 	//Use index so when we select paper we know which index or player we're on so we hide only the other
 	//choices(rock, and scissors) to display only paper for that particular player(on his turn)
@@ -167,10 +111,11 @@ for(var i = 0; i < 2; i++)
 
 	//This allows us to know which paper we clicked on since we have 2 palyers that contain
 	//rock choice so using class will help us know which player selected that choice.
-	rock.addClass("rockClass");
+	//rock.addClass("rockClass");
+	rock.addClass("choice")
 
 	//give (rock) div a value which is used to display on screen player1 or player2's choice	
-	rock.attr("value", "rock");
+	rock.attr("pick", "rock");
 
 	//Use index so when we select paper we know which index or player we're on so we hide only the other
 	//choices(paper, and scissors) to display only paper for that particular player(on his turn)
@@ -186,10 +131,11 @@ for(var i = 0; i < 2; i++)
 
 	//This allows us to know which paper we clicked on since we have 2 palyers that contain
 	//scissors choice so using class will help us know which player selected that choice.
-	scissors.addClass("scissorsClass");
+	//scissors.addClass("scissorsClass");
+	scissors.addClass("choice")
 
 	//give (scissors) div a value which is used to display on screen player1 or player2's choice	
-	scissors.attr("value", "scissors");
+	scissors.attr("pick", "scissors");
 
 	//Use index so when we select paper we know which index or player we're on so we hide only the other
 	//choices(paper, and scissors) to display only paper for that particular player(on his turn)
@@ -203,7 +149,7 @@ for(var i = 0; i < 2; i++)
 
 	//Display Each player wins & loses
 	var totalWinsLoses = $("<p>");
-	totalWinsLoses = ("<p class='win_lose" + i + "'> Wins: <span id = 'totalWin" + i + "'>  </span> Loses: <span id='totalLose" + i + "'>  </span> </p>");
+	totalWinsLoses = ("<p class='win_lose" + i + "'> Wins: <span class='totalWin" + i + "'>  </span> Loses: <span class='totalLose" + i + "'> </span> Ties: <span class='totalTies" + i + "'>   </span> </p>");
 
 
 	//append data inside playerDiv
@@ -221,13 +167,405 @@ for(var i = 0; i < 2; i++)
 
 
 	//Display winner Div
-	if(i === 0)
+	if(i === 1)
 	{
 		displayWinnerDiv();
 	}
 	
 
 }
+
+
+//Set the turn to 0 whenever a player disconnects
+data.onDisconnect().update(
+{
+	turn: 0
+});
+
+//reset the chat if player disconnects
+data.child("chat").onDisconnect().set(
+{
+
+});
+
+//Keeps global variables in sync with firebase on changes to firebase
+//NOTE: (player1Exist) & (player2Exist) update to (true) each time we add the 
+//		corresponding player
+data.on("value", function(snapshot)
+{
+	//from data(root) go to players(child root) and see if there exist a child root of (players) called (1)
+	//if exists player1Exist = true; else players1Exist = false
+	//As soon as (player1) clicks [submit[ to enter his name then player1Exist = true
+	//because of ( player1Ref.set( }); ) at assignPlayer() function
+	player1Exists = snapshot.child("players").child("1").exists();	//player1Ref
+
+	//from data(root) go to players(child root) and see if there exists a child root of (players) called (2)
+	//if exists player2Exists = true; else player2Exist = false
+	player2Exists = snapshot.child("player").child("2").exists();	//player2Ref
+
+
+});
+
+//Keeps the gameObject.turn variable in sync with firebase
+//This will execute each time we update firebase: turn: 1 or 2 or 3
+turn.on("value", function(snapshot)
+{
+	//turn = 1 when player1(Allen) chooses Rock, Paper or Scissors
+	if(snapshot.val() == 1)
+	{
+		//set gameObject: instance variable (turn = 1)
+		gameObject.turn = 1;
+		user1Choose();
+	}
+	//turn = 2 when player2(Bob) chooses Rock, Paper or Scissors
+	else if(snapshot.val() == 2)
+	{
+		gameObject.turn = 2;
+		user2Choose();
+	}
+	//turn = 3 when both player1(Allen) and player2(Bob) both made a choice
+	else if(snapshot.val() == 3)
+	{
+		gameObject.turn = 3;
+		checkWinner();
+	}
+	//snapshot.val() = turn = 0 at initial run or if player disconnects
+	//Try console.log(snapshot.val());
+	else if(snapshot.val() == 0)
+	{
+		gameObject.turn = 0;
+	}
+
+});
+
+//checks to see if changeDOM is true in firebase
+//We come here on player2(Bob) submit name button or
+//assignPlayer()/else if() {}
+data.child("changeDOM").on("value", function(snapshot)
+{
+	//snapshot.val() = true, as soon as player 2 submits name("Bob")
+	//console.log(snapshot.val()) SAME AS: changeDOM);
+	if(snapshot.val() == true)
+	{
+		changeDOM1();
+	}
+	else
+	{
+		//Do Nothing
+		return;
+	}
+
+});
+
+//on click function for when a user submits name
+$("#submit-button").on("click", function(event)
+{
+	
+	//Do not refresh
+	event.preventDefault();
+
+	name = $("#name").val();
+
+	//Call this function in order to add Player1 root and update gameObject values
+	assignPlayer(name);
+
+	//Hide (Name) textbox
+	$("#name").hide();
+
+	//Hide (submit) name button
+	$("#submit-button").hide();
+
+	return false;
+
+});
+
+//function to assign player to player1 or player2
+function assignPlayer()
+{
+	//if (player1) does Not exist assign as (player1) and set (player1) as new firebase object
+	if(!player1Exists)
+	{
+		gameObject.userId = 1;
+		gameObject.name = name;
+
+		//add data in firebase/database
+		player1Ref.set(
+		{
+			name: name,
+			pick: "",
+			wins: 0,
+			losses: 0,
+			ties: 0
+		});
+
+		//change the DOM for player 1
+
+		//Instruct player1
+		$("#instructions").text("Hi " + name + " you are player 1.");
+		//Use CSS to center the instuctinos
+		$("#instructions").css("margin-left", "450px");
+		$("#instructions").css("margin-right", "20px");
+		$("#instructions").css("margin-top", "20px");
+
+		//chat window textfield
+		$("#exampleFormControlTextarea1").html("You can chat with your opponent here when they join the game.")
+
+
+		//Hide Waiting for player1
+		$(".header1").hide();
+
+		//Display Player1's name and append name
+		$(".name1").show();
+		$(".name1").text(name);
+
+		//Display wins and loses and append total wins and total loses
+		$(".win_lose1").show();
+		$(".totalWin1").text(gameObject.wins);
+		$(".totalLose1").text(gameObject.losses);
+		$(".totalTies1").text(gameObject.ties);
+
+		//check to see if player 2 exists in the databaase in case there is already a player 2 waiting for a new plaeyr1, if player 2 does not exist set the turn to 1
+		playersRef.once("value", function(snapshot)
+		{
+			//As soon as changeDOM is updated in firebase this will execute
+			if(player2Exists)
+			{
+				data.update(
+				{
+					changeDOM: true
+				});
+
+				data.update(
+				{
+					turn: 1
+				});
+			}
+		});
+
+		//erases player 1 on disconnect
+		player1Ref.onDisconnect().remove();
+
+	}
+	else if(player1Exists && !player2Exists)
+	{
+		//if (player1) exists but (player2) does Not exist, assign (player2) and set (player2) as a new firebase object
+
+		gameObject.userId = 2;
+		gameObject.name2 = name;
+
+		//Add data inside Firebase/database
+		player2Ref.set(
+		{
+			name: name,
+			pick: "",
+			wins: 0,
+			losses: 0,
+			ties: 0
+		});
+
+		//get Player1 info from firebase and set it in gameObject
+		player1Ref.once("value", function(snapshot)
+		{
+			gameObject.name = snapshot.val().name;
+			gameObject.wins = snapshot.val().wins;
+			gameObject.losses = snapshot.val().losses;
+			gameObject.ties = snapshot.val().ties;
+
+			//Change the DOM for player 2
+			$("#instructions").text("Hi " + name + ". You are Player2");
+			$("#instructions2").text("Waiting for " + gameObject.name + " to choose");
+			//Applay CSS to center instructions1 & 2
+			$("#instructions").css("margin-left", "450px");
+			$("#instructions").css("margin-right", "20px");
+			$("#instructions").css("margin-top", "20px");
+
+			$("#instructions2").css("margin-left", "450px");
+			$("#instructions2").css("margin-right", "20px");
+			$("#instructions2").css("margin-top", "20px");
+
+			//Display in Textarea
+			$("#exampleFormControlTextarea1").text("you are playing against" + gameObject.name + "you can chat here.");
+
+			//Hide waiting for player2
+			$(".header2").hide();
+			
+
+
+			//Display Player2's name and append name
+			$(".name2").show();
+			$(".name2").text(name);
+
+			//Display wins and loses and append total wins and total loses
+			$(".win_lose2").show();
+			$(".totalWin2").text(gameObject.wins);
+			$(".totalLose2").text(gameObject.losses);
+			$(".totalTies2").text(gameObject.ties);
+
+			//From Player2's screen hide player1's header show player1's (Name, wins, losses, ties)
+			$(".header1").hide();
+			$(".name1").show();
+			$(".name1").text(gameObject.name);
+			$(".win_lose1").show();
+			$(".totalWin1").text(gameObject.wins);
+			$(".totalLose1").text(gameObject.losses);
+			$(".totalTies1").text(gameObject.ties);
+
+		});
+
+		//Update Firebase. Set the turn to 1 so player 1 can pick
+		//when turn: 1 we immediately go back to turn.on("value", function(snapshot){}
+		data.update(
+		{
+			turn: 1
+
+		});
+
+		//Update Firebase. THis will cause DOM to change and execute if(snapshot.val() == true) above at
+		//data.child("changeDOM").on("value", function(snapshot){ });
+		data.update(
+		{
+			changeDOM: true
+		});
+
+		//erases player 2 on disconnect
+		player2Ref.onDisconnect().remove();
+
+
+	}
+	else	//both player1 && player2 exist, already full
+	{
+		alert("sorry the game is full. Try again shortly");
+	}
+
+}
+
+//Function for player1 to chooose rock, paper, or scissors
+function changeDOM1()
+{
+
+	//double check this will only work for player 1 and it is player 1 turn
+	if(gameObject.userId == "1")
+	{
+		player2Ref.once("value", function(snapshot)
+		{
+			//Obtain the values of the variables in the database
+			gameObject.name2 = snapshot.val().name;
+			gameObject.wins2 = snapshot.val().wins;
+			gameObject.losses2 = snapshot.val().losses;
+			gameObject.ties2 = snapshot.val().losses;
+
+			$("#name2").text(gameObject.name2);
+
+			$("#instructions2").text("It is your turn");
+			//Use CSS to center 2nd pair of instructions
+			$("#instructions2").css("margin-left", "450px");
+			$("#instructions2").css("margin-right", "20px");
+			$("#instructions2").css("margin-top", "20px");
+
+			$("#exampleFormControlTextarea1").empty()
+			$("#exampleFormControlTextarea1").text("you are playing against" + gameObject.name2 + "you can chat here.");
+			$("#wins2").text("Wins: " + snapshot.val().wins);
+			$("losses2").text("Losses: " + snapshot.val().losses);
+			$("#ties2").text("Ties: " + snapshot.val().ties);
+
+		});
+
+		data.update(
+		{
+			changeDOM: false
+		});
+	}
+}
+
+//function for player1 to choose rock, paper, or scissors
+function user1Choose()
+{
+	//double check this will only work for player 1 and it is player 1 turn
+	if(gameObject.userId == "1" && gameObject.turn == 1)
+	{
+		$("#instructions2").text("It is your turn");
+		//Use CSS to center instructions
+		$("#instructions2").css("margin-left", "450px");
+		$("#instructions2").css("margin-right", "20px");
+		$("#instructions2").css("margin-top", "20px");
+
+
+		//Show Player1's options
+		$(".paper1").show();
+		$(".rock1").show();
+		$(".scissors1").show();
+	
+
+		$(".choice").on("click", function()
+		{
+			//Store click value(rock, paper, or scissors) in player1 gameObject.pick
+			gameObject.pick = $(this).attr("pick");
+		
+			//Update Firebase with player1's pick
+			player1Ref.update(
+			{
+				pick: gameObject.pick
+
+			});
+
+			//update to turn 2 for player 2 to choose rock, paper or scissors
+			data.update(
+			{
+				turn: 2
+			});
+
+			//change DOM for player 1
+			$("#instructions2").text("Waiting for " + gameObject.name2 + " to choose");
+			//Use CSS to center instructions
+			$("#instructions2").css("margin-left", "450px");
+			$("#instructions2").css("margin-right", "20px");
+			$("#instructions2").css("margin-top", "20px");
+
+			//Hide player1 other choices so that only his pick gets displayed
+			if(gameObject.pick === "paper")
+			{
+				$(".rock1").hide();
+				$(".scissors1").hide()
+
+				//make choice bold and centered
+				$(this).css("font-size", "30px");
+        		$(this).css("font-weight", "bold");
+        		$(this).css("text-align", "center");
+
+			}
+			else if(gameObject.pick === "rock")
+			{
+				$(".paper1").hide();
+				$(".scissors1").hide()
+
+				//make choice bold and centered
+				$(this).css("font-size", "30px");
+        		$(this).css("font-weight", "bold");
+        		$(this).css("text-align", "center");
+
+			}
+			else if(gameObject.pick === "scissors")
+			{
+				$(".paper1").hide();
+				$(".rock1").hide()
+
+				//make choice bold and centered
+				$(this).css("font-size", "30px");
+        		$(this).css("font-weight", "bold");
+        		$(this).css("text-align", "center");
+			}
+
+
+
+	});
+
+    }
+
+}
+
+
+
+
 
 //Winner Div
 function displayWinnerDiv()
@@ -243,156 +581,4 @@ function displayWinnerDiv()
 
 
 
-//Paper: Where Player 1 or player 2 selects a choice: PAPER which gets display on the screen and we hide the 2 remaining choices
-//NOTE: we use class(paperClass) to know which player div we are inside of. Hide rest of choices once player makes selectoin.
-$(".paperClass").on("click", function()
-{
-
-		//use global variable so we can store what player selected in database
-		 choice = $(this).attr("value");
-		 				//OR
-		 //use attr for $(box0) && $(box1)
-
-		//use index value so we only hide choices of a particular player div
-		var index = $(this).attr("index");
-
-        //Hide the other choices through attr(Index) to know which player or player div we are
-        //currently on. This will Display Paper only
-        $(".rock" + index).hide();
-        $(".scissors" + index).hide();
-
-        //Make player's choice font size bigger, bolded, and centered
-        $(this).css("font-size", "30px");
-        $(this).css("font-weight", "bold");
-        $(this).css("text-align", "center");
-
-
-});
-
-//Rock: Where Player 1 or player 2 selects a choice: ROCK which gets display on the screen and we hide the 2 remaining choices
-//NOTE: we use class(paperClass) to know which player div we are inside of. Hide rest of choices once player makes selectoin.
-$(".rockClass").on("click", function()
-{
-
-		//use global variable so we can store what player selected in database
-		 choice = $(this).attr("value");
-
-		//use index value so we only hide choices of a particular player div
-		var index = $(this).attr("index");
-
-        //Hide the other choices through attr(Index) to know which player or player div we are
-        //currently on. This will Display Paper only
-        $(".paper" + index).hide();
-        $(".scissors" + index).hide();
-
-        //Make player's choice font size bigger, bolded, and centered
-        $(this).css("font-size", "30px");
-        $(this).css("font-weight", "bold");
-        $(this).css("text-align", "center");
-
-
-});
-
-//Scissors: Where Player 1 or player 2 selects a choice: SCISSORS which gets display on the screen and we hide the 2 remaining choices
-//NOTE: we use class(paperClass) to know which player div we are inside of. Hide rest of choices once player makes selectoin.
-$(".scissorsClass").on("click", function()
-{
-
-		//use global variable so we can store what player selected in database
-		 choice = $(this).attr("value");
-
-		//use index value so we only hide choices of a particular player div
-		var index = $(this).attr("index");
-
-        //Hide the other choices through attr(Index) to know which player or player div we are
-        //currently on. This will Display Paper only
-        $(".paper" + index).hide();
-        $(".rock" + index).hide();
-
-        //Make player's choice font size bigger, bolded, and centered
-        $(this).css("font-size", "30px");
-        $(this).css("font-weight", "bold");
-        $(this).css("text-align", "center");
-
-
-});
-
-
-//Click [Start] button hide both (waiting for player 1/2), then display player name for
-//each player (div) box, meaning dipslaying player1 name & player2 name
-$("#button1").on("click", function()
-{
-	//Prevent refresh
-	event.preventDefault();
-
-	//Giv playerDiv attribute name & obtain value in textbox and store in playerName
-	$("#box" + playerPos).attr("playerName", $("#inputPlayer").val().trim());
-	
-
-
-	//Give playerDiv attribute anme & obtain value in textbox and sotre in "playerName"
-	//We use global Var(playerPos) to know which player's name to display at a particular div.
-	//Also cneter each name inside player div
-	var currentPlayerName = $("#box" + playerPos).attr("playerName");
-	$(".name" + playerPos).text(currentPlayerName);
-	$(".name" + playerPos).css("text-align", "center");
-
-
-	//now hide waiting for player 1 & 2 and display each player's name
-	$(".header" + playerPos).hide();
-	$(".name" + playerPos).show();
-
-	
-
-	//Show current Win: Loses: for particular player
-	$(".win_lose" + playerPos).show();
-	$(".win_lose" + playerPos).css("text-align", "center");
-
-
-
-	//Store Data inside (player/ 1) && (player / 2) database
-	database.ref("players/" + (playerPos+1)).set( 
-  	{
-
-    	totalLosses: $("#box" + playerPos).attr("Losses"),
-    	totalWins: $("#box" + playerPos).attr("Wins"),
-    	name: currentPlayerName
-    	
-
-  	});
-
-
-
-	//reset variable once reached player2 since we don't want player3 to have a turn
-	if(playerPos === 1)
-	{
-		//call reset function
-		resetPlayerPos();
-	}
-	else
-	{
-		//incrmeent (playerPos) for player2 div
-		playerPos++;
-	}
-
-	
-
-});
-
-
-
-
-//Reset playerPos variable when we've reached index 1 or player 2 in order to continue to 
-//use it for player 1 and 2. 0 = player1 	1 = player2
-function resetPlayerPos()
-{
-
-	playerPos = 0;
-
-
-}
-
-
-
-
-
+});	//end of document ready
