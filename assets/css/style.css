@@ -60,7 +60,7 @@ body
 }
 
 /*button to submit chat message */
-#button2
+#send-button
 {
 	background: lightgreen;
 	margin-top: 20px;
@@ -87,14 +87,7 @@ body
 
 }
 
-/*button to submit chat message */
-#button2
-{
-	background: lightgreen;
-	margin-top: 20px;
-	margin-left: 0;
 
-}
 
 /* Where we dump all 3 div boxes: player1, player2, and Winnder Div */
 #playerContainers
@@ -216,12 +209,20 @@ body
 .win_lose1
 {
 	display: none;
+
+	/*Absolute will prevent having bolded choices push win: lose: ties: below the div */
+	position: absolute;
+	bottom: 0px
 }
 
 /* player 2 */
 .win_lose2
 {
 	display: none;
+
+	/*Absolute will prevent having bolded choices push win: lose: ties: below the div */
+	position: absolute;		
+	bottom: 0px;
 }
 
 

@@ -193,6 +193,7 @@ data.child("chat").onDisconnect().set(
 //		corresponding player
 data.on("value", function(snapshot)
 {
+
 	//from data(root) go to players(child root) and see if there exist a child root of (players) called (1)
 	//if exists player1Exist = true; else players1Exist = false
 	//As soon as (player1) clicks [submit[ to enter his name then player1Exist = true
@@ -201,7 +202,7 @@ data.on("value", function(snapshot)
 
 	//from data(root) go to players(child root) and see if there exists a child root of (players) called (2)
 	//if exists player2Exists = true; else player2Exist = false
-	player2Exists = snapshot.child("player").child("2").exists();	//player2Ref
+	player2Exists = snapshot.child("players").child("2").exists();	//player2Ref
 
 
 });
@@ -278,6 +279,8 @@ $("#submit-button").on("click", function(event)
 	return false;
 
 });
+
+
 
 //function to assign player to player1 or player2
 function assignPlayer()
@@ -384,7 +387,7 @@ function assignPlayer()
 			$("#instructions2").css("margin-top", "20px");
 
 			//Display in Textarea
-			$("#exampleFormControlTextarea1").text("you are playing against" + gameObject.name + "you can chat here.");
+			$("#exampleFormControlTextarea1").text("you are playing against " + gameObject.name + " you can chat here.");
 
 			//Hide waiting for player2
 			$(".header2").hide();
@@ -454,7 +457,9 @@ function changeDOM1()
 			gameObject.losses2 = snapshot.val().losses;
 			gameObject.ties2 = snapshot.val().losses;
 
-			$("#name2").text(gameObject.name2);
+			//Display Player2's name from Player1's screen as soon as Player1 can make a choice
+			$(".name2").show();
+			$(".name2").text(gameObject.name2);
 
 			$("#instructions2").text("It is your turn");
 			//Use CSS to center 2nd pair of instructions
@@ -463,7 +468,7 @@ function changeDOM1()
 			$("#instructions2").css("margin-top", "20px");
 
 			$("#exampleFormControlTextarea1").empty()
-			$("#exampleFormControlTextarea1").text("you are playing against" + gameObject.name2 + "you can chat here.");
+			$("#exampleFormControlTextarea1").text("you are playing against " + gameObject.name2 + " you can chat here.");
 			$("#wins2").text("Wins: " + snapshot.val().wins);
 			$("losses2").text("Losses: " + snapshot.val().losses);
 			$("#ties2").text("Ties: " + snapshot.val().ties);
@@ -478,8 +483,10 @@ function changeDOM1()
 }
 
 //function for player1 to choose rock, paper, or scissors
+//Executes when turn: 1 / gameObject1.turn = 1
 function user1Choose()
 {
+
 	//double check this will only work for player 1 and it is player 1 turn
 	if(gameObject.userId == "1" && gameObject.turn == 1)
 	{
@@ -490,16 +497,23 @@ function user1Choose()
 		$("#instructions2").css("margin-top", "20px");
 
 
+		//Hide waiting for player2 from player1's DOM
+		$(".header2").hide();
+
 		//Show Player1's options
 		$(".paper1").show();
 		$(".rock1").show();
 		$(".scissors1").show();
+
+		
+		
 	
 
 		$(".choice").on("click", function()
 		{
 			//Store click value(rock, paper, or scissors) in player1 gameObject.pick
 			gameObject.pick = $(this).attr("pick");
+			
 		
 			//Update Firebase with player1's pick
 			player1Ref.update(
@@ -563,8 +577,519 @@ function user1Choose()
 
 }
 
+//Functino for player 2 to choose rock, paper, or scissors,. Called from turn.on() function
+function user2Choose()
+{
 
 
+	//double check this will only work for player 2 and it is player2's turn
+	if(gameObject.userId == "2" && gameObject.turn == 2)
+	{
+		$("#instructions2").text("It is your turn");
+		//Use CSS to center instructions
+		$("#instructions2").css("margin-left", "450px");
+		$("#instructions2").css("margin-right", "20px");
+		$("#instructions2").css("margin-top", "20px");
+
+		//Show Player1's options
+		$(".paper2").show();
+		$(".rock2").show();
+		$(".scissors2").show();
+
+		$(".choice").on("click", function()
+		{
+			//Store click value(rock, paper, or scissors) in player2 gameObject.pick2
+			gameObject.pick2 = $(this).attr("pick");
+			console.log(gameObject.pick2);
+
+			//update Firebase with Player2's pick
+			player2Ref.update(
+			{
+				pick: gameObject.pick2
+
+			});
+
+			//change the turn to 3 to trigger the logic funciton
+			data.update(
+			{
+				turn: 3
+
+			});
+
+			//Hide player2 other choices so that only his pick gets displayed
+			if(gameObject.pick2 === "paper")
+			{
+				$(".rock2").hide();
+				$(".scissors2").hide()
+
+				//make choice bold and centered
+				$(this).css("font-size", "30px");
+        		$(this).css("font-weight", "bold");
+        		$(this).css("text-align", "center");
+
+			}
+			else if(gameObject.pick2 === "rock")
+			{
+				$(".paper2").hide();
+				$(".scissors2").hide()
+
+				//make choice bold and centered
+				$(this).css("font-size", "30px");
+        		$(this).css("font-weight", "bold");
+        		$(this).css("text-align", "center");
+
+			}
+			else if(gameObject.pick2 === "scissors")
+			{
+				$(".paper2").hide();
+				$(".rock2").hide()
+
+				//make choice bold and centered
+				$(this).css("font-size", "30px");
+        		$(this).css("font-weight", "bold");
+        		$(this).css("text-align", "center");
+			}
+
+
+		});
+	}
+}
+
+//Check for winner
+function checkWinner()
+{
+	//ensure it is turn 3
+	if(gameObject.turn == 3)
+	{
+
+		//player1 changes the turn to 0 so the function only runs once
+		//only user1 does this because if both users do it , then would mess up the order
+		if(gameObject.userId == "1")
+		{
+			data.update
+			{
+				turn: 0
+			}
+		}
+
+		playersRef.once("value", function(snapshot)
+		{
+			//obtain values from Firebase
+			var p1 = snapshot.child("1").val().pick;
+			var p2 = snapshot.child("2").val().pick;
+
+			//9 possible combinations of 2 player choices
+			if(p1 == "paper" && p2 == "paper" )			//Tie
+    		{
+
+    			//Display Tie inside WiinderDiv
+    			$("#winnerMsg").show();
+    			$("#winnerMsg").text("Tie");
+
+    			//increment tie for player1
+    			gameObject.ties++;
+
+    			//store Player1 ties inside Firebase
+    			player1Ref.update(
+    			{
+    				ties: gameObject.ties
+    			});
+
+    			//increment tie for player2
+    			gameObject.ties2++;
+
+    			//store Player2 ties inside Firebase
+    			player2Ref.update(
+    			{
+    				ties: gameObject.ties2
+    			});
+
+    		
+    		}
+    		else if(p1 == "paper" && p2 == "rock")
+    		{
+    	    	//Player1 wins
+    			$("#winnerMsg").show();
+    			$("#winnerMsg").text(snapshot.child("2").val().name + " Wins!");
+
+    			//increment player1 wins
+    			gameObject.wins++;
+
+    			//Update firebase
+    			player1Ref.update(
+    			{
+    				wins: gameObject.wins
+    			});
+
+    			//increment player2 losses
+    			gameObject.losses2++;
+
+    			//Update firebase
+    			player2Ref.update(
+    			{
+    				losses: gameObject.losses2
+    			});
+    		}
+    		else if(p1 == "paper" && p2 == "scissors")
+    		{
+    			//Player 2 Wins
+    			$("#winnerMsg").show();
+    			$("#winnerMsg").text(snapshot.child("2").val().name + " Wins!");				//Retrives Player 2 info from Firebase
+
+    			//increment player1 losses
+    			gameObject.losses++;
+
+    			//Update firebase
+    			player1Ref.update(
+    			{
+    				losses: gameObject.losses
+    			});
+
+    			//increment player2 wins
+    			gameObject.wins2++;
+
+    			//Update firebase
+    			player2Ref.update(
+    			{
+    				wins: gameObject.wins2
+    			});
+
+    		}
+    		else if(p1 == "rock" && p2 == "rock")
+    		{
+    			//Tie
+    			$("#winnerMsg").show();
+    			$("#winnerMsg").text("Tie");
+
+    			//increment tie for player1
+    			gameObject.ties++;
+
+    			//store Player1 ties inside Firebase
+    			player1Ref.update(
+    			{
+    				ties: gameObject.ties
+    			});
+
+    			//increment tie for player2
+    			gameObject.ties2++;
+
+    			//store Player2 ties inside Firebase
+    			player2Ref.update(
+    			{
+    				ties: gameObject.ties2
+    			});
+
+    			
+    		}
+    		else if(p1 == "rock" && p2 == "paper")
+    		{
+    			//Player2 Wins
+    			$("#winnerMsg").show();
+    			$("#winnerMsg").text(snapshot.child("2").val().name + " Wins!");
+
+    			//increment player1 losses
+    			gameObject.losses++;
+
+    			//Update firebase
+    			player1Ref.update(
+    			{
+    				losses: gameObject.losses
+    			});
+
+    			//increment player2 wins
+    			gameObject.wins2++;
+
+    			//Update firebase
+    			player2Ref.update(
+    			{
+    				wins: gameObject.wins2
+    			});
+    		}
+    		else if(p1 == "rock" && p2 == "scissors")
+    		{
+    			//Player1 wins
+    			$("#winnerMsg").show();
+    			$("#winnerMsg").text(snapshot.child("1").val().name + " Wins!");
+
+    			//increment player1 wins
+    			gameObject.wins++;
+
+    			//Update firebase
+    			player1Ref.update(
+    			{
+    				wins: gameObject.wins
+    			});
+
+    			//increment player2 losses
+    			gameObject.losses2++;
+
+    			//Update firebase
+    			player2Ref.update(
+    			{
+    				losses: gameObject.losses2
+    			});
+    		}
+    		else if(p1 == "scissors" && p2 == "rock")
+    		{
+    			//Player 2 Wins
+    			$("#winnerMsg").show();
+    			$("#winnerMsg").text(snapshot.child("2").val().name + " Wins!");				//Retrives Player 2 info from Firebase
+
+    			//increment player1 losses
+    			gameObject.losses++;
+
+    			//Update firebase
+    			player1Ref.update(
+    			{
+    				losses: gameObject.losses
+    			});
+
+    			//increment player2 wins
+    			gameObject.wins2++;
+
+    			//Update firebase
+    			player2Ref.update(
+    			{
+    				wins: gameObject.wins2
+    			});
+    		}
+    		else if(p1 == "scissors" && p2 == "paper")
+    		{
+    			
+    			//Player1 wins
+    			$("#winnerMsg").show();
+    			$("#winnerMsg").text(snapshot.child("1").val().name + " Wins!");
+
+    			//increment player1 wins
+    			gameObject.wins++;
+
+    			//Update firebase
+    			player1Ref.update(
+    			{
+    				wins: gameObject.wins
+    			});
+
+    			//increment player2 losses
+    			gameObject.losses2++;
+
+    			//Update firebase
+    			player2Ref.update(
+    			{
+    				losses: gameObject.losses2
+    			});
+    		}
+    		else if(p1 == "scissors" && p2 == "scissors")
+    		{
+    			//Tie
+    			$("#winnerMsg").show();
+    			$("#winnerMsg").text("Tie");
+
+    			//increment tie for player1
+    			gameObject.ties++;
+
+    			//store Player1 ties inside Firebase
+    			player1Ref.update(
+    			{
+    				ties: gameObject.ties
+    			});
+
+    			//increment tie for player2
+    			gameObject.ties2++;
+
+    			//store Player2 ties inside Firebase
+    			player2Ref.update(
+    			{
+    				ties: gameObject.ties2
+    			});
+    		
+    		}
+
+    		//Change Dom for Both Players which displays current (Wins, Losses, Ties)
+    		//for both Player1 && Player2
+    		
+    		//Player1
+    		$(".totalWin1").text(gameObject.wins);
+    		$(".totalLose1").text(gameObject.losses);
+    		$(".totalTies1").text(gameObject.ties);
+
+    		//Player2
+    		$(".totalWin2").text(gameObject.wins2);
+    		$(".totalLose2").text(gameObject.losses2);
+    		$(".totalTies2").text(gameObject.ties2);
+
+    		//Wait 3 seconds and reset game so Player 1 can choose
+    		setTimeout(reset, 3000)
+
+
+		});
+	}
+
+
+}
+
+//resets everything so that we go back to Player1 to make a choice but maintain current score
+function reset()
+{
+										//Player1(Reset Choice Selection)
+	//PAPER(Player1): Unbold choice "paper" and realign to the left when user makes choice again
+	$(".paper1").css("font-size", "20px");
+    $(".paper1").css("font-weight", "normal");
+    $(".paper1").css("text-align", "left");
+
+    //Rock(Player1): Unbold choice "rock" and realign to the left when user makes choice again
+	$(".rock1").css("font-size", "20px");
+    $(".rock1").css("font-weight", "normal");
+    $(".rock1").css("text-align", "left");
+
+    //Rock(Player1): Unbold choice "scissors" and realign to the left when user makes choice again
+	$(".scissors1").css("font-size", "20px");
+    $(".scissors1").css("font-weight", "normal");
+    $(".scissors1").css("text-align", "left");
+
+
+    									//Player2(Reset Choice Selection)
+	//PAPER(Player2): Unbold choice "paper" and realign to the left when user makes choice again
+	$(".paper2").css("font-size", "20px");
+    $(".paper2").css("font-weight", "normal");
+    $(".paper2").css("text-align", "left");
+
+    //Rock(Player1): Unbold choice "rock" and realign to the left when user makes choice again
+	$(".rock2").css("font-size", "20px");
+    $(".rock2").css("font-weight", "normal");
+    $(".rock2").css("text-align", "left");
+
+    //Rock(Player1): Unbold choice "scissors" and realign to the left when user makes choice again
+	$(".scissors2").css("font-size", "20px");
+    $(".scissors2").css("font-weight", "normal");
+    $(".scissors2").css("text-align", "left");
+
+	//Changes turn = 1 for both paler 1 and player2 so gameObject.turn = 1 on both DOMS
+	data.update(
+	{
+		turn: 1
+
+	});
+
+	//Clear Winner Div and hide
+	$("#winnerMsg").hide();
+    $("#winnerMsg").text("");
+
+    //Changes the DOM for Player 2, Player 1's DOM is changed by the user1Choose function which is called since the turn is set back to 1
+    if(gameObject.userId == "2")
+    {
+    	//clear choices (Rock, Paper, Scissors) for Player 2 since it's player1's turn
+    	$(".paper2").hide();
+		$(".rock2").hide();
+		$(".scissors2").hide();
+
+		//change DOM for player 1
+		$("#instructions2").text("Waiting for " + gameObject.name + " to choose");
+		//Use CSS to center instructions
+		$("#instructions2").css("margin-left", "450px");
+		$("#instructions2").css("margin-right", "20px");
+		$("#instructions2").css("margin-top", "20px");
+    }
+
+    //ensures that neither player disconnects during the timeout, if one does the turn is set to 0 until a new player is added so that the user1Choose function is not called
+    playersRef.once("value", function(snapshot)
+    {
+
+    	//Checks the total number of current players and 
+    	//ensures that we still have 2 players in the game
+    	if(snapshot.numChildren() != 2)
+    	{
+    		data.update(
+    		{
+    			turn: 0
+    		});
+    	}
+    });
+}
+
+//on click for the chat submit button that runs sendChat function
+$("#send-button").on("click", function()
+{
+	var chat = $("#exampleFormControlInput1").val();
+
+	//function
+	sendChat(chat);
+
+	$("#chat").val('');		//clear textfield each time we click [Submit]
+
+	return false;
+});
+
+//fucntion to send chat to firebase, only works if two users are present
+function sendChat(chat)
+{
+	if(player1Exists && player2Exists)
+	{
+		//Player1 sends a message
+		if(gameObject.userId == "1")
+		{
+			//Firebase
+			//NOTE: data.child("chat) creates a new child root called "chat" derived from parent root(data)
+			data.child("chat").push(
+			{
+				message: gameObject.name + ": " + chat
+			});
+
+			//refer to textarea for chat
+			var log = $("#exampleFormControlTextarea1");
+
+			//add scroll bar to ("#exampleFormControlTextarea1") when text between Player1 & 2 we reached the bottom
+			log.animate(
+			{
+				scrollTop: log.prop("scrollHeight")
+			}, 1000);
+		}
+		else if(gameObject.userId == "2")
+		{
+
+			//Firebase
+			//NOTE: data.child("chat) creates a new child root called "chat" derived from parent root(data)
+			data.child("chat").push(
+			{
+				message: gameObject.name2 + ": " + chat
+			});
+
+			//refer to textarea for chat
+			var log = $("#exampleFormControlTextarea1");
+
+			//add scroll bar to ("#exampleFormControlTextarea1") when text between Player1 & 2 we reached the bottom
+			log.animate(
+			{
+				scrollTop: log.prop("scrollHeight")
+			}, 1000);
+
+		}
+		else
+		{
+			return;
+		}
+	}
+
+}
+
+//updates the chat-window(#exampleFormControlTextarea1) each time a new child is pushed to firebase
+data.child("chat").on("value", function(snapshot)
+{
+	//Prevents displaying previous message or prevents duplicats displaying in Textarea(chat window)
+	$("#exampleFormControlTextarea1").empty();
+
+	//For EAch player screen display message on both player DOM or screen
+	snapshot.forEach(function(childSnap)
+	{
+		if(gameObject.userId == "1" || gameObject.userId == "2")
+		{
+			//This actually appends messages on the screen by obtaining
+			//The (message) firebase variable and displaying it in (#exampleFormControlTextarea1)
+			var p = $("<p>");
+			p.text(childSnap.val().message);	//obtain from Firebase
+			$("#exampleFormControlTextarea1").append(p);
+		}
+	});
+});
 
 
 //Winner Div
